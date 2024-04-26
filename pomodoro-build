@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# builds pomodoro app
+
+echo "doing xcode developer things, you will need computer password... sorry"
+# sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+
+xcodebuild clean archive -project Pomodoro.xcodeproj -scheme "Pomodoro" -configuration Release -archivePath build/Pomodoro.xcarchive 
+
+
+xcodebuild -exportArchive -archivePath build/Pomodoro.xcarchive -exportPath build 
+
