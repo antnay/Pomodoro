@@ -21,7 +21,6 @@ struct MenuButtonStyle: ButtonStyle {
             .padding([.leading, .trailing], 10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                //                isHighlighted ? Color.accentColor : Color.clear
                 isHighlighted ? Color.gray.opacity(0.30) : Color.clear
             )
             .cornerRadius(5)
@@ -114,6 +113,7 @@ struct TimerView: View {
             Toggle("", isOn: $setting)
                 .onChange(of: setting) { value in
                     if !setting {
+                        timer.reset()
                         timer.defaultSetting()
                     }
                 }
@@ -160,7 +160,10 @@ struct TimerView: View {
         .disabled(!setting)
         .onSubmit {
             if setting {
-                timer.settings(workTime: workTime, shortTime: shortTime, longTime: shortTime, numBreaks: numBreaks)
+                if timer.isRunning {
+                    timer.reset()
+                }
+                timer.customSettings(workTime: workTime, shortTime: shortTime, longTime: shortTime, numBreaks: numBreaks)
             }
         }
         Divider()
@@ -209,8 +212,9 @@ class PomodoroTimer: ObservableObject {
         self.updateTime()
     }
     
-    func settings(workTime: TimeInterval, shortTime: TimeInterval, longTime: TimeInterval, numBreaks: Int8) {
+    func customSettings(workTime: TimeInterval, shortTime: TimeInterval, longTime: TimeInterval, numBreaks: Int8) {
         timer?.invalidate()
+        reset()
         self.pomCount = 0
         self.workTime = workTime * 60
         self.shortTime = shortTime * 60
@@ -224,12 +228,11 @@ class PomodoroTimer: ObservableObject {
     func defaultSetting() {
         timer?.invalidate()
         self.pomCount = 0
-        let defaultWorkTime: TimeInterval = 25 * 60
-        self.workTime = defaultWorkTime
+        self.workTime = 25 * 60
         self.shortTime = 5 * 60
         self.longTime = 15 * 60
         self.numBreaks = 4
-        self.curTime = defaultWorkTime
+        self.curTime = 25 * 60
         self.isRunning = false
         self.updateTime()
     }
@@ -287,7 +290,7 @@ class PomodoroTimer: ObservableObject {
                 } else {
                     intervalType = .longBreak
                     curTime = longTime
-                    pomCount = 0
+                    pomCount = 0 // maybe dont reset, find a way to keep all poms
                 }
                 curType = "Break"
             }
