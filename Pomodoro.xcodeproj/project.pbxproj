@@ -10,6 +10,7 @@
 		920C35312BC096FC008142FF /* PomodoroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 920C35302BC096FC008142FF /* PomodoroApp.swift */; };
 		920C35352BC096FD008142FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 920C35342BC096FD008142FF /* Assets.xcassets */; };
 		920C35382BC096FD008142FF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 920C35372BC096FD008142FF /* Preview Assets.xcassets */; };
+		922D9F3E2C12D80500B3EAFF /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 922D9F3D2C12D80500B3EAFF /* Timer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		920C35342BC096FD008142FF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		920C35372BC096FD008142FF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		920C35392BC096FD008142FF /* Pomodoro.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pomodoro.entitlements; sourceTree = "<group>"; };
+		922D9F3D2C12D80500B3EAFF /* Timer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
 		92C5F64A2BC09A9F006DE15F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,6 +55,7 @@
 			children = (
 				92C5F64A2BC09A9F006DE15F /* Info.plist */,
 				920C35302BC096FC008142FF /* PomodoroApp.swift */,
+				922D9F3D2C12D80500B3EAFF /* Timer.swift */,
 				920C35342BC096FD008142FF /* Assets.xcassets */,
 				920C35392BC096FD008142FF /* Pomodoro.entitlements */,
 				920C35362BC096FD008142FF /* Preview Content */,
@@ -96,7 +99,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					920C352C2BC096FC008142FF = {
 						CreatedOnToolsVersion = 15.2;
@@ -139,6 +142,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				920C35312BC096FC008142FF /* PomodoroApp.swift in Sources */,
+				922D9F3E2C12D80500B3EAFF /* Timer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -179,6 +183,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -242,6 +247,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -273,6 +279,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Pomodoro/Preview Content\"";
 				DEVELOPMENT_TEAM = 29GAZ66V65;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -307,6 +314,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Pomodoro/Preview Content\"";
 				DEVELOPMENT_TEAM = 29GAZ66V65;
 				ENABLE_HARDENED_RUNTIME = YES;

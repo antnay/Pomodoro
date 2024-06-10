@@ -6,6 +6,7 @@
 //
 
 // TODO increment counts and switch to break!
+// FIXME fix the memory leaks with @Published
 
 import SwiftUI
 import Foundation
@@ -35,15 +36,18 @@ struct MenuButtonStyle: ButtonStyle {
 
 @main
 struct PomodoroApp: App {
-    @StateObject private var timer = PomodoroTimer()
-    private var statusItem: NSStatusItem?
-    
+//    @StateObject var timer: PomodoroTimer = PomodoroTimer()
+        @ObservedObject var timer: PomodoroTimer = PomodoroTimer()
+
     var body: some Scene {
         MenuBarExtra {
             TimerView(timer: timer)
+//            TimerView()
+//                .environmentObject(timer)
                 .frame(width: 250)
                 .cornerRadius(5.0)
-        } label: {
+        } 
+    label: {
             if timer.isRunning {
                 Text(timer.timeString)
                     .font(.system(size: 15, weight: .semibold))
@@ -63,8 +67,10 @@ struct PomodoroApp: App {
     }
 }
 
+
 struct TimerView: View {
-    @ObservedObject var timer: PomodoroTimer
+//    @EnvironmentObject var timer: PomodoroTimer
+    var timer: PomodoroTimer
     @State var setting: Bool = false
     @State var workTime: TimeInterval = 25
     @State var shortTime: TimeInterval = 5
@@ -73,11 +79,6 @@ struct TimerView: View {
     @State var pomCounter: Int8 = 0
     let paddingValue: CGFloat = 15
     
-    enum DefaultValues: Int {
-        case work = 25
-        case short = 5
-        case long = 15
-    }
     var body: some View {
         HStack {
             Text(timer.curType)
@@ -180,148 +181,6 @@ struct TimerView: View {
 
 
 
-class PomodoroTimer: ObservableObject {
-    @Published var pomCount: Int8
-    @Published var workTime: TimeInterval
-    @Published var shortTime: TimeInterval
-    @Published var longTime: TimeInterval
-    @Published var curTime: TimeInterval
-    @Published var isRunning: Bool
-    @Published var curType: String = "Pomodoro"
-    @Published var staticImage = NSImage(named: "tomato")!
-    @Published var timeString: String = ""
-    
-    private var timer: Timer? = nil
-    private var intervalType: IntervalType = .work
-    private var remainingTime: TimeInterval = 0
-    private var numBreaks: Int8
-    
-    enum IntervalType {
-        case work, shortBreak, longBreak
-    }
-    
-    init() {
-        self.pomCount = 0
-        let defaultWorkTime: TimeInterval = 25 * 60
-        self.workTime = defaultWorkTime
-        self.shortTime = 5 * 60
-        self.longTime = 15 * 60
-        self.numBreaks = 4
-        self.curTime = defaultWorkTime
-        self.isRunning = false
-        self.updateTime()
-    }
-    
-    func customSettings(workTime: TimeInterval, shortTime: TimeInterval, longTime: TimeInterval, numBreaks: Int8) {
-        timer?.invalidate()
-        reset()
-        self.pomCount = 0
-        self.workTime = workTime * 60
-        self.shortTime = shortTime * 60
-        self.longTime = longTime * 60
-        self.numBreaks = numBreaks
-        self.curTime = workTime * 60
-        self.isRunning = false
-        self.updateTime()
-    }
-    
-    func defaultSetting() {
-        timer?.invalidate()
-        self.pomCount = 0
-        self.workTime = 25 * 60
-        self.shortTime = 5 * 60
-        self.longTime = 15 * 60
-        self.numBreaks = 4
-        self.curTime = 25 * 60
-        self.isRunning = false
-        self.updateTime()
-    }
-    func start() {
-        self.updateTime()
-        curType = "Work"
-        if !isRunning {
-            isRunning = true
-            if timer == nil {
-                if intervalType == .work {
-                    curTime = workTime
-                } else {
-                    curTime = remainingTime
-                }
-            }
-            timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(decrementTime), userInfo: nil, repeats: true)
-            RunLoop.current.add(timer!, forMode: .common)
-        }
-    }
-    
-    func pause() {
-        //        print("pausing")
-        curType = "Paused"
-        isRunning = false
-        timer?.invalidate()
-        remainingTime = curTime
-    }
-    
-    @objc func decrementTime() {
-        if curTime > 0 {
-            curTime -= 1
-            DispatchQueue.main.async {
-                [weak self] in
-                self?.updateTime()
-            }
-            // debug printing
-            //            print(curTime)
-            //            print(intervalType)
-            // end debug printing
-        } else {
-            if (intervalType == .work) {
-                pomCount += 1
-            }
-            timer?.invalidate()
-            switchInterval()
-        }
-    }
-    
-    func switchInterval() {
-        if curTime <= 0 {
-            if (intervalType == .work) {
-                if pomCount < 4 {
-                    intervalType = .shortBreak
-                    curTime = shortTime
-                } else {
-                    intervalType = .longBreak
-                    curTime = longTime
-                    pomCount = 0 // maybe dont reset, find a way to keep all poms
-                }
-                curType = "Break"
-            }
-            else {
-                intervalType = .work
-                curTime = workTime
-                curType = "Work"
-            }
-            timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(decrementTime), userInfo: nil, repeats: true)
-            RunLoop.current.add(timer!, forMode: .common)
-        }
-    }
-    
-    func reset() {
-        timer?.invalidate()
-        curType = "Pomodoro"
-        isRunning = false
-        pomCount = 0
-        remainingTime = 0
-        intervalType = .work
-        curTime = workTime
-        updateTime()
-    }
-    
-    private func updateTime() {
-        let minutes = Int(curTime) / 60
-        let seconds = Int(curTime) % 60
-        self.timeString = String(format: "%02i:%02i", minutes, seconds)
-    }
-    
-}
 
 //@main
 //struct Notification:App {
