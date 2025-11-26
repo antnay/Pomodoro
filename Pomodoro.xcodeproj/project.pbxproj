@@ -11,6 +11,8 @@
 		920C35352BC096FD008142FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 920C35342BC096FD008142FF /* Assets.xcassets */; };
 		920C35382BC096FD008142FF /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 920C35372BC096FD008142FF /* Preview Assets.xcassets */; };
 		922D9F3E2C12D80500B3EAFF /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 922D9F3D2C12D80500B3EAFF /* Timer.swift */; };
+		923992F32ED67B390018F57B /* VIewDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 923992F22ED67B310018F57B /* VIewDefaults.swift */; };
+		924E61A02E1F3309007468C8 /* DefaultValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924E619F2E1F3309007468C8 /* DefaultValues.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +22,8 @@
 		920C35372BC096FD008142FF /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		920C35392BC096FD008142FF /* Pomodoro.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pomodoro.entitlements; sourceTree = "<group>"; };
 		922D9F3D2C12D80500B3EAFF /* Timer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
+		923992F22ED67B310018F57B /* VIewDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VIewDefaults.swift; sourceTree = "<group>"; };
+		924E619F2E1F3309007468C8 /* DefaultValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultValues.swift; sourceTree = "<group>"; };
 		92C5F64A2BC09A9F006DE15F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -53,8 +57,10 @@
 		920C352F2BC096FC008142FF /* Pomodoro */ = {
 			isa = PBXGroup;
 			children = (
+				923992F22ED67B310018F57B /* VIewDefaults.swift */,
 				92C5F64A2BC09A9F006DE15F /* Info.plist */,
 				920C35302BC096FC008142FF /* PomodoroApp.swift */,
+				924E619F2E1F3309007468C8 /* DefaultValues.swift */,
 				922D9F3D2C12D80500B3EAFF /* Timer.swift */,
 				920C35342BC096FD008142FF /* Assets.xcassets */,
 				920C35392BC096FD008142FF /* Pomodoro.entitlements */,
@@ -141,7 +147,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				923992F32ED67B390018F57B /* VIewDefaults.swift in Sources */,
 				920C35312BC096FC008142FF /* PomodoroApp.swift in Sources */,
+				924E61A02E1F3309007468C8 /* DefaultValues.swift in Sources */,
 				922D9F3E2C12D80500B3EAFF /* Timer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,6 +284,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Pomodoro/Pomodoro.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

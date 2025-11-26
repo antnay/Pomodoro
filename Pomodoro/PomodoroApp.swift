@@ -8,13 +8,13 @@
 // TODO increment counts and switch to break!
 // FIXME fix the memory leaks with @Published
 
-import SwiftUI
 import Foundation
+import SwiftUI
 import UserNotifications
 
 struct MenuButtonStyle: ButtonStyle {
     @State private var isHighlighted = false
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding([.top], 5)
@@ -33,23 +33,19 @@ struct MenuButtonStyle: ButtonStyle {
     }
 }
 
-
 @main
 struct PomodoroApp: App {
-//    @StateObject var timer: PomodoroTimer = PomodoroTimer()
-        @ObservedObject var timer: PomodoroTimer = PomodoroTimer()
+    @StateObject var timer = PomodoroTimer()
 
     var body: some Scene {
+
         MenuBarExtra {
             TimerView(timer: timer)
-//            TimerView()
-//                .environmentObject(timer)
                 .frame(width: 250)
                 .cornerRadius(5.0)
-        } 
-    label: {
-            if timer.isRunning {
-                Text(timer.timeString)
+        } label: {
+            if timer.currState != .start {
+                Text(timer.timeString.unsafelyUnwrapped)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
                     .background(Color.blue)
@@ -58,6 +54,7 @@ struct PomodoroApp: App {
                     let ratio = $0.size.height / $0.size.width
                     $0.size.height = 25
                     $0.size.width = 25 / ratio
+                    $0.isTemplate = true
                     return $0
                 }(NSImage(named: "tomato")!)
                 Image(nsImage: image)
@@ -67,27 +64,18 @@ struct PomodoroApp: App {
     }
 }
 
-
 struct TimerView: View {
-//    @EnvironmentObject var timer: PomodoroTimer
-    var timer: PomodoroTimer
-    @State var setting: Bool = false
-    @State var workTime: TimeInterval = 25
-    @State var shortTime: TimeInterval = 5
-    @State var longTime: TimeInterval = 15
-    @State var numBreaks: Int8 = 4
-    @State var pomCounter: Int8 = 0
+    @ObservedObject var timer: PomodoroTimer
     let paddingValue: CGFloat = 15
-    
+
     var body: some View {
         HStack {
-            Text(timer.curType)
+            Text(timer.currState.stringValue)
                 .font(.system(size: 12, weight: .semibold))
             Spacer()
-//            Text(timer.timeString)
-            Text("\(timer.pomCount)  🍅")
+            Text("\($timer.runningPoms.wrappedValue)  🍅")
         }
-        .padding([.leading, .trailing], paddingValue)
+        .padding([.leading, .trailing], ViewDefaults.padding.value)
         .padding(.top, 10)
         Divider()
         VStack {
@@ -104,69 +92,8 @@ struct TimerView: View {
             }
             .buttonStyle(MenuButtonStyle())
         }
-        
         Divider()
-        
-        HStack {
-            Text("Custom pomodoro")
-                .frame(alignment: .leading)
-            Spacer()
-            Toggle("", isOn: $setting)
-                .onChange(of: setting) { value in
-                    if !setting {
-                        timer.reset()
-                        timer.defaultSetting()
-                    }
-                }
-                .toggleStyle(.switch)
-                .controlSize(.small)
-        }
-        .padding([.leading, .trailing], paddingValue)
-        
-        
-        Form {
-            HStack {
-                Text("Work")
-                    .frame(alignment: .leading)
-                Spacer()
-                TextField("", value: $workTime, formatter: NumberFormatter())
-                    .frame(width: 50, alignment: .leading)
-            }
-            .padding([.leading, .trailing], paddingValue)
-            HStack {
-                Text("Short break")
-                    .frame(alignment: .leading)
-                Spacer()
-                TextField("", value: $shortTime, formatter: NumberFormatter())
-                    .frame(width: 50, alignment: .leading)
-            }
-            .padding([.leading, .trailing], paddingValue)
-            HStack {
-                Text("Long break")
-                    .frame(alignment: .leading)
-                Spacer()
-                TextField("", value: $longTime, formatter: NumberFormatter())
-                    .frame(width: 50, alignment: .trailing)
-            }
-            .padding([.leading, .trailing], paddingValue)
-            HStack {
-                Text("Pomodoro count")
-                    .frame(alignment: .leading)
-                Spacer()
-                TextField("", value: $numBreaks, formatter: NumberFormatter())
-                    .frame(width: 50, alignment: .leading)
-            }
-            .padding([.leading, .trailing], paddingValue)
-        }
-        .disabled(!setting)
-        .onSubmit {
-            if setting {
-                if timer.isRunning {
-                    timer.reset()
-                }
-                timer.customSettings(workTime: workTime, shortTime: shortTime, longTime: shortTime, numBreaks: numBreaks)
-            }
-        }
+        Settings(timer: timer)
         Divider()
         VStack {
             Button("Quit") {
@@ -179,24 +106,57 @@ struct TimerView: View {
     }
 }
 
+struct Settings: View {
+    @ObservedObject var timer: PomodoroTimer
 
-
-
-//@main
-//struct Notification:App {
-//    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-//        if success {
-//            print("Started")
-//        } else if let error {
-//            print(error.localizedDescription)
-//        }
-//    }
-//    content.title = "Started Timer"
-//    content.sound = UNNotificationSound.default
-//
-//    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-//
-//    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-//
-//    UNUserNotificationCenter.current().add(request)
-//}
+    var body: some View {
+        Form {
+            VStack {
+                HStack {
+                    Text("work time")
+                        .frame(alignment: .leading)
+                    Spacer()
+                    TextField("", value: $timer.workTime, format: .number)
+                        .frame(width: 50, alignment: .leading)
+                }
+                .padding([.leading, .trailing], ViewDefaults.padding.value)
+                HStack {
+                    Text("short break")
+                        .frame(alignment: .leading)
+                    Spacer()
+                    TextField(
+                        "", value: $timer.shortBreak,
+                        formatter: NumberFormatter()
+                    )
+                    .frame(width: 50, alignment: .leading)
+                }
+                .padding([.leading, .trailing], ViewDefaults.padding.value)
+                HStack {
+                    Text("long break")
+                        .frame(alignment: .leading)
+                    Spacer()
+                    TextField(
+                        "", value: $timer.longBreak,
+                        formatter: NumberFormatter()
+                    )
+                    .frame(width: 50, alignment: .trailing)
+                }
+                .padding([.leading, .trailing], ViewDefaults.padding.value)
+                HStack {
+                    Text("pomodoros")
+                        .frame(alignment: .leading)
+                    Spacer()
+                    TextField(
+                        "", value: $timer.pomCount,
+                        formatter: NumberFormatter()
+                    )
+                    .frame(width: 50, alignment: .leading)
+                }
+                .padding([.leading, .trailing], ViewDefaults.padding.value)
+            }
+        }
+        .onSubmit {
+            timer.reset()
+        }
+    }
+}

@@ -1,156 +1,244 @@
+import Combine
 import Foundation
 import SwiftUI
-import Combine
+import UserNotifications
 
 class PomodoroTimer: ObservableObject {
-    @Published var timeString: String
-    @Published var pomCount: Int8
-    @Published var workTime: TimeInterval
-    @Published var shortTime: TimeInterval
-    @Published var longTime: TimeInterval
-    @Published var isRunning: Bool
-    @Published var curType: String = "Pomodoro"
-    @Published var staticImage = NSImage(named: "tomato")!
-    
+    @Published var timeString: String?
+    @Published var isRunning: Bool = false
+    @Published var currState: IntervalType = .start
+    @Published var runningPoms: Int8 = 0
 
-    private var timer: Timer? = nil
-    private var intervalType: IntervalType = .work
-    private var remainingTime: TimeInterval = 0
-    private var numBreaks: Int8
+    @Published var pomCount: Int8 {
+        didSet {
+            UserDefaults.standard.set(pomCount, forKey: "pomCount")
+        }
+    }
+    @Published var workTime: TimeInterval {
+        didSet {
+            UserDefaults.standard.set(workTime, forKey: "workTime")
+        }
+    }
+    @Published var shortBreak: TimeInterval {
+        didSet {
+            UserDefaults.standard.set(shortBreak, forKey: "shortBreak")
+        }
+    }
+    @Published var longBreak: TimeInterval {
+        didSet {
+            UserDefaults.standard.set(longBreak, forKey: "longBreak")
+        }
+    }
+
+    private var lastTimeStringUpdate: String? = nil
+    private var timerTask: Task<Void, Never>? = nil
     private var curTime: TimeInterval
-//    private var cancellable: AnyCancellable?
+    private var runningBreaks: Int8 = 0
 
-//     var timeString: Binding<String>
+    final let MINUTE: Double = 60
 
-    enum IntervalType {
-        case work, shortBreak, longBreak
-    }
-    
     init() {
-        self.timeString = ""
-        self.pomCount = 0
-        let defaultWorkTime: TimeInterval = 25 * 60
-        self.workTime = defaultWorkTime
-        self.shortTime = 5 * 60
-        self.longTime = 15 * 60
-        self.numBreaks = 4
-        self.curTime = defaultWorkTime
+        requestNoti()
+        self.runningPoms = 0
+        self.timeString = nil
         self.isRunning = false
-        self.updateTime()
-      
+
+        let wTime =
+            UserDefaults.standard.double(forKey: "workTime") == 0
+            ? 25 : UserDefaults.standard.double(forKey: "workTime")
+
+        self.pomCount =
+            Int8(UserDefaults.standard.integer(forKey: "pomCount")) == 0
+            ? 4 : Int8(UserDefaults.standard.integer(forKey: "pomCount"))
+        self.workTime = wTime
+        self.shortBreak =
+            UserDefaults.standard.double(forKey: "shortBreak") == 0
+            ? 5 : UserDefaults.standard.double(forKey: "shortBreak")
+        self.longBreak =
+            UserDefaults.standard.double(forKey: "longBreak") == 0
+            ? 15 : UserDefaults.standard.double(forKey: "longBreak")
+
+        self.curTime = wTime * MINUTE
+        self.timeString = curTime.description
     }
-    
-    func customSettings(workTime: TimeInterval, shortTime: TimeInterval, longTime: TimeInterval, numBreaks: Int8) {
-//        timer?.invalidate()
-        reset()
-        print("im in custom setting yo")
-        self.pomCount = 0
-        self.workTime = workTime * 60
-        self.shortTime = shortTime * 60
-        self.longTime = longTime * 60
-        self.numBreaks = numBreaks
-        self.curTime = workTime * 60
-        self.isRunning = false
-//        self.updateTime()
-    }
-    
-    func defaultSetting() {
-//        timer?.invalidate()
-        reset()
-        print("im in default setting yo")
-        self.pomCount = 0
-        self.workTime = 25 * 60
-        self.shortTime = 5 * 60
-        self.longTime = 15 * 60
-        self.numBreaks = 4
-        self.curTime = 25 * 60
-        self.isRunning = false
-//        self.updateTime()
-    }
-    
+
+    //    func start() {
+    //        updateTime()
+    //        currState = .work
+    //        self.isRunning = true
+    //
+    //        timerTask = Task(priority: .background) {  // background priority
+    //            while isRunning {
+    //                //                try? await Task.sleep(nanoseconds: 1_100_000_000)
+    //                try? await Task.sleep(nanoseconds: 5_000_000)
+    //                decrementTime()
+    //            }
+    //        }
+    //    }
+
     func start() {
-//        self.updateTime()
-        curType = "Work"
-        if !isRunning {
-            isRunning = true
-            if timer == nil {
-                if intervalType == .work {
-                    curTime = workTime
-                } else {
-                    curTime = remainingTime
-                }
+        updateTime()
+        currState = .work
+        self.isRunning = true
+
+        scheduleNextTick()
+    }
+
+    private func scheduleNextTick() {
+        guard isRunning else { return }
+
+        timerTask = Task(priority: .background) {
+            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            if isRunning {
+                decrementTime()
+                scheduleNextTick()
             }
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                self.decrementTime()
-            }
-            RunLoop.current.add(timer!, forMode: .common)
         }
     }
-    
+
     func pause() {
-        //        print("pausing")
-        curType = "Paused"
         isRunning = false
-        timer?.invalidate()
-        remainingTime = curTime
+        currState = .pause
+        timerTask?.cancel()
+        timerTask = nil
     }
-    
-//    func getTime() -> String {
-//        return timeString
-//    }
-    
-    private func decrementTime() {
-           guard isRunning else { return }
 
-           if curTime > 0 {
-               curTime -= 1
-               updateTime()
-           } else {
-               pomCount += (intervalType == .work ? 1 : 0)
-               switchInterval()
-           }
-       }
-    
-    private func switchInterval() {
-        if curTime <= 0 {
-            if (intervalType == .work) {
-                if pomCount < 4 {
-                    intervalType = .shortBreak
-                    curTime = shortTime
-                } else {
-                    intervalType = .longBreak
-                    curTime = longTime
-                    pomCount = 0 // maybe dont reset, find a way to keep all poms
+    @inline(__always) private func decrementTime() {
+        guard isRunning else { return }
+        if curTime > 0 {
+            switch currState {
+            case .pause:
+                Task { @MainActor in
+                    self.isRunning = false
                 }
-                curType = "Break"
+                timerTask?.cancel()
+                timerTask = nil
+            default:
+                curTime -= 1
+                updateTime()
             }
-            else {
-                intervalType = .work
-                curTime = workTime
-                curType = "Work"
+        } else {
+            switch currState {
+            case .start:
+                Task { @MainActor in
+                    self.isRunning = false
+                }
+            case .pause:
+                Task { @MainActor in
+                    self.isRunning = false
+                }
+                timerTask?.cancel()
+                timerTask = nil
+            case .work:
+                if runningBreaks == pomCount - 1 {
+                    Task { @MainActor in
+                        self.currState = .longBreak
+                        self.curTime = self.longBreak * self.MINUTE
+                    }
+                    longBreakNoti()
+                } else {
+                    Task { @MainActor in
+                        self.currState = .shortBreak
+                        self.curTime = self.shortBreak * self.MINUTE
+                    }
+                    shortBreakNoti()
+                }
+            case .shortBreak:
+                Task { @MainActor in
+                    self.runningBreaks += 1
+                    self.currState = .work
+                    self.curTime = self.workTime * self.MINUTE
+                }
+                getToWorkNoti()
+            case .longBreak:
+                Task { @MainActor in
+                    self.runningPoms += 1
+                    self.runningBreaks = 0
+                    self.currState = .work
+                    self.curTime = self.workTime * self.MINUTE
+                }
+                getToWorkNoti()
             }
-//            timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(decrementTime), userInfo: nil, repeats: true)
-//            RunLoop.current.add(timer!, forMode: .common)
         }
     }
-    
-    func reset() {
-        timer?.invalidate()
-        timer = nil
-        curType = "Pomodoro"
-        isRunning = false
-        pomCount = 0
-        remainingTime = 0
-        intervalType = .work
-        curTime = workTime
-//        updateTime()
+    @inline(__always) private func updateTime() {
+        let minutes = Int(curTime / MINUTE)
+        let seconds = Int(curTime.truncatingRemainder(dividingBy: MINUTE))
+        let newTimeString = String(format: "%02i:%02i", minutes, seconds)
+        if newTimeString != lastTimeStringUpdate {
+            lastTimeStringUpdate = newTimeString
+            Task { @MainActor in
+                self.timeString = newTimeString
+            }
+        }
     }
-    
-    private func updateTime() {
-        let minutes = Int(curTime) / 60
-        let seconds = Int(curTime) % 60
 
-        timeString = String(format: "%02i:%02i", minutes, seconds) // da problem
+    func reset() {
+        timerTask?.cancel()
+        timerTask = nil
+        isRunning = false
+        curTime = workTime * MINUTE
+        timeString = curTime.description
+        currState = .start
+        runningPoms = 0
+        runningBreaks = 0
     }
-    
+}
+
+func requestNoti() {
+    UNUserNotificationCenter.current().requestAuthorization(options: [
+        .alert, .sound, .badge,
+    ]) { granted, error in
+        if granted {
+            print("Notification permission granted.")
+        } else {
+            print(
+                "Notification permission denied: \(error?.localizedDescription ?? "Unknown error")"
+            )
+        }
+    }
+}
+
+private func sendNotification(title: String, body: String, identifier: String) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+
+    let req = UNNotificationRequest(
+        identifier: identifier, content: content, trigger: nil)
+
+    UNUserNotificationCenter.current().add(req) { error in
+        if let error = error {
+            print(
+                "Error scheduling notification: \(error.localizedDescription)")
+        }
+    }
+}
+
+func shortBreakNoti() {
+    sendNotification(
+        title: "pomodoro", body: "long break started", identifier: "0")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        UNUserNotificationCenter.current().removeDeliveredNotifications(
+            withIdentifiers: ["0"])
+    }
+}
+
+func longBreakNoti() {
+    sendNotification(
+        title: "pomodoro", body: "long break started", identifier: "1")
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        UNUserNotificationCenter.current().removeDeliveredNotifications(
+            withIdentifiers: ["1"])
+    }
+}
+
+func getToWorkNoti() {
+    sendNotification(title: "pomodoro", body: "get to work", identifier: "2")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        UNUserNotificationCenter.current().removeDeliveredNotifications(
+            withIdentifiers: ["2"])
+    }
 }
