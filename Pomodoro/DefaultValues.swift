@@ -20,15 +20,15 @@ enum IntervalType: String {
     case work = "work"
     case shortBreak = "short break"
     case longBreak = "long break"
-    
+
     var stringValue: String {
-            switch self {
-            case .start: return "pomodoro"
-            case .pause: return "pause"
-            case .work: return "work"
-            case .shortBreak: return "short break"
-            case .longBreak: return "long break"
-            }
+        switch self {
+        case .start: return "pomodoro"
+        case .pause: return "pause"
+        case .work: return "work"
+        case .shortBreak: return "short break"
+        case .longBreak: return "long break"
         }
-    
+    }
+
 }

@@ -30,6 +30,9 @@ class PomodoroTimer: ObservableObject {
         }
     }
 
+    private var lastWorkTime: TimeInterval = 0
+    private var lastShortBreak: TimeInterval = 0
+    private var lastLongBreak: TimeInterval = 0
     private var lastTimeStringUpdate: String? = nil
     private var timerTask: Task<Void, Never>? = nil
     private var curTime: TimeInterval
@@ -42,22 +45,27 @@ class PomodoroTimer: ObservableObject {
         self.runningPoms = 0
         self.timeString = nil
         self.isRunning = false
-
+        self.pomCount =
+            Int8(UserDefaults.standard.integer(forKey: "pomCount")) == 0
+            ? 4 : Int8(UserDefaults.standard.integer(forKey: "pomCount"))
         let wTime =
             UserDefaults.standard.double(forKey: "workTime") == 0
             ? 25 : UserDefaults.standard.double(forKey: "workTime")
 
-        self.pomCount =
-            Int8(UserDefaults.standard.integer(forKey: "pomCount")) == 0
-            ? 4 : Int8(UserDefaults.standard.integer(forKey: "pomCount"))
-        self.workTime = wTime
-        self.shortBreak =
+        let sBTime =
             UserDefaults.standard.double(forKey: "shortBreak") == 0
             ? 5 : UserDefaults.standard.double(forKey: "shortBreak")
-        self.longBreak =
+        let lBTime =
             UserDefaults.standard.double(forKey: "longBreak") == 0
             ? 15 : UserDefaults.standard.double(forKey: "longBreak")
 
+        self.workTime = wTime
+        self.shortBreak = sBTime
+        self.longBreak = lBTime
+
+        self.lastWorkTime = wTime
+        self.lastShortBreak = sBTime
+        self.lastWorkTime = lBTime
         self.curTime = wTime * MINUTE
         self.timeString = curTime.description
     }
@@ -88,7 +96,7 @@ class PomodoroTimer: ObservableObject {
         guard isRunning else { return }
 
         timerTask = Task(priority: .background) {
-            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
             if isRunning {
                 decrementTime()
                 scheduleNextTick()
@@ -182,6 +190,31 @@ class PomodoroTimer: ObservableObject {
         currState = .start
         runningPoms = 0
         runningBreaks = 0
+        lastWorkTime = workTime
+    }
+
+    func updateSettings() {
+        switch self.currState {
+        case .work:
+            let wDiff = lastWorkTime - (curTime / 60)
+            curTime = (workTime - wDiff) * MINUTE
+            break
+        case .shortBreak:
+            let sBDiff = lastShortBreak - (curTime / 60)
+            curTime = (shortBreak - sBDiff) * MINUTE
+            break
+        case .longBreak:
+            let lBDiff = lastLongBreak - (curTime / 60)
+            curTime = (longBreak - lBDiff) * MINUTE
+            break
+        default:
+            break
+        }
+
+        lastWorkTime = workTime
+        lastShortBreak = shortBreak
+        lastLongBreak = longBreak
+
     }
 }
 

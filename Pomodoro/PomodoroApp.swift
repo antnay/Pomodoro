@@ -156,7 +156,7 @@ struct Settings: View {
             }
         }
         .onSubmit {
-            timer.reset()
+            timer.updateSettings()
         }
     }
 }
